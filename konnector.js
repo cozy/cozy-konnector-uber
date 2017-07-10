@@ -73,22 +73,20 @@ function logIn (requiredFields, bills, data, next) {
       }
     }
 
-    log.info('Logging in')
+    log('info', 'Logging in')
 
     return request(signInOptions, (err, res) => {
       if (err) {
-        log.error('Login failed')
-        log.raw(err)
-        return next(err)
+        log('log', err)
+        return next('LOGIN_FAILED')
       }
       if (res.statuCode >= 400) {
-        log.error('Login failed')
         const err = `Status code: ${res.statusCode}`
-        log.error(err)
-        return next(err)
+        log('log', err)
+        return next('LOGIN_FAILED')
       }
-      log.info('Login succeeded')
-      log.info('Fetch trips info')
+      log('info', 'Login succeeded')
+      log('info', 'Fetch trips info')
 
       const tripsOptions = {
         method: 'GET',
@@ -97,11 +95,11 @@ function logIn (requiredFields, bills, data, next) {
       }
       return request(tripsOptions, (err, res, body) => {
         if (err) {
-          log.error('An error occured while fetching trips information')
-          log.raw(err)
-          return next(err)
+          log('error', 'An error occured while fetching trips information')
+          log('log', err)
+          return next('UNKNOWN_ERROR')
         }
-        log.info('Fetch trips information succeded')
+        log('info', 'Fetch trips information succeded')
         data.tripsPage = body
         return next()
       })
@@ -117,11 +115,11 @@ function logOut (requiredFields, entries, data, next) {
   }
   request(options, (err) => {
     if (err) {
-      log.err('Failed to logout')
-      log.raw(err)
-      return next(err)
+      log('error', 'Failed to logout')
+      log('log', err)
+      return next('UNKNOWN_ERROR')
     }
-    log.info('Succesfully logged out')
+    log('info', 'Succesfully logged out')
     return next()
   })
 }
@@ -132,10 +130,10 @@ function getTrips (requiredFields, bills, data, next) {
                   .map((i, element) => $(element).data('target'))
                   .get()
                   .map(trip => trip.replace('#trip-', ''))
-  log.info(`Found ${tripsId.length} uber trips`)
+  log('info', `Found ${tripsId.length} uber trips`)
   const maybeNext = $('a.btn.pagination__next').attr('href')
 
-  log.info(`Found ${tripsId.length} uber trips`)
+  log('info', `Found ${tripsId.length} uber trips`)
   const fetchedBills = []
   async.eachSeries(tripsId, (tripId, callback) => {
     const tripOption = {
@@ -145,9 +143,9 @@ function getTrips (requiredFields, bills, data, next) {
     }
     return request(tripOption, (err, res, body) => {
       if (err) {
-        log.err('Failed to get trip information')
-        log.raw(err)
-        return callback(err)
+        log('error', 'Failed to get trip information')
+        log('log', err)
+        return callback('UNKNOWN_ERROR')
       }
       $ = cheerio.load(body)
       const amount = $('td[class="text--right alpha weight--semibold"]')
@@ -162,24 +160,24 @@ function getTrips (requiredFields, bills, data, next) {
       }
       return request(billUrlOptions, (err, res, body) => {
         if (err) {
-          log.err('Failed to get bill url')
-          log.raw(err)
-          return callback(err)
+          log('error', 'Failed to get bill url')
+          log('log', err)
+          return callback('UNKNOWN_ERROR')
         }
         if (res.statusCode >= 400) {
-          log.info(`No bill for this trip (${tripId})`)
+          log('info', `No bill for this trip (${tripId})`)
           return callback()
         }
         let parsedBody
         try {
           parsedBody = JSON.parse(body)
         } catch (e) {
-          log.err(e)
+          log('error', e)
           return callback(e)
         }
         // This can be due to a cancelled trip.
         if (parsedBody.length === 0) {
-          log.info(`No bill for this trip (${tripId})`)
+          log('info', `No bill for this trip (${tripId})`)
           return callback()
         }
 
@@ -208,14 +206,14 @@ function getTrips (requiredFields, bills, data, next) {
     if (typeof maybeNext !== 'undefined') {
       return request(`https://riders.uber.com/trips${maybeNext}`, (err, res, body) => {
         if (err) {
-          log.error(err)
-          return next('request error')
+          log('error', err)
+          return next('UNKNOWN_ERROR')
         }
         data.tripsPage = body
         return getTrips(requiredFields, bills, data, next)
       })
     }
-    log.info('Bills succesfully fetched')
+    log('info', 'Bills succesfully fetched')
     return next()
   })
 }
