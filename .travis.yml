@@ -9,6 +9,7 @@ branches:
 env:
   global:
   - CXX=g++-4.8
+  - secure: Imxs6hl0y0EAcAZamm+aFOIJultro3usy4YP3HgzU/QLafAPgpsQ0Nra+rx59fWsfMafpFrBiDTufyXj76EnOzD0IFbbBQGL5Q8wXy32PlFSCql6n+SXSSK1qI8cL9XDfWiv957OGdFvr3D9kIB4vGZWcmEWIYLINwaunRpzVvqnhvcf5JDLfjtDHQYBg9C1b4VGlP/jlW83ZS6woI/h4lnsnLTu9KUGKKzeP4fN3QHKP7ZwX+m7PpVC3l5EsI5rl6qgpzG+W/XhgwGniOROjxz0Ja5W2FseXq8ZJugJa18i88jTohd98o/5JQ/KH1e7o2xYwJvEoES27vMGV//ALT0d/E9zikdBZHevDxq6HFZAO+cqsCfwQmdF9+ljDsG8ySEagYo9MBp4VXpNV5vYefRJBc/qyuVd0jDu+sNIP/6NI7eCpO5xd5VSG2iyMeOnBsYGOiYn6PF8Y7bhGhB4kW/EH51wcqZ7dMAujuMvqYLnGkODfeB/jPKz/xHIWg10wVajMd9bJ5PkUbCrAD0PeuFUxofpeQwoYRCVLTxr0FCw8gT+195deo+zahOCz22PbEX3pWPOeLNcvse7S7rJbstYZ5Vjyjs/bZiIFE+60dj1W2zpEL/2KWdLQi+PO1yb9TyG/xB3DzK3FzrLfdIyOWTb0MONLJrBYRWf5f3BfJY=
 addons:
   apt:
     sources:
