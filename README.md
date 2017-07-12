@@ -1,5 +1,5 @@
-[Cozy][cozy] <YOUR SUPER NEW KONNECTOR NAME>
-=======================================
+[Cozy] Uber Konnector
+=====================
 
 What's Cozy?
 ------------
@@ -8,10 +8,10 @@ What's Cozy?
 
 [Cozy] is a platform that brings all your web services in the same private space. With it, your webapps and your devices can share data easily, providing you with a new experience. You can install Cozy on your own hardware where no one's tracking you.
 
-What's this new konnector?
+What's this Uber konnector?
 --------------------------
 
-<YOUR DESCRIPTION HERE>
+This konnector allow user to retrieve their Uber bills.
 
 ### Open a Pull-Request
 
@@ -138,7 +138,7 @@ yarn lint
 
 ### Maintainer
 
-The lead maintainers for this konnector is <YOUR NAME>
+The lead maintainers for this konnector is @doubleface
 
 
 ### Get in touch
@@ -154,7 +154,7 @@ You can reach the Cozy Community by:
 License
 -------
 
-<YOUR KONNECTOR NAME> is developed by <your name> and distributed under the [AGPL v3 license][agpl-3.0].
+Uber Konnector is developed by Cozy and distributed under the [AGPL v3 license][agpl-3.0].
 
 [cozy]: https://cozy.io "Cozy Cloud"
 [agpl-3.0]: https://www.gnu.org/licenses/agpl-3.0.html

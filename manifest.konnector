@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "name": "konnector name",
+  "name": "Uber",
   "type": "node",
-  "slug": "konnectorslug",
-  "description": "description",
-  "source": "git://github.com/cozy/cozy-konnector-thename.git",
+  "slug": "uber",
+  "description": "Get your bills from Uber",
+  "source": "git://github.com/cozy/cozy-konnector-uber.git",
   "fields": {
     "save_folder": {
       "doctype": "io.cozy.files",
@@ -30,9 +30,9 @@
     }
   },
   "permissions": {
-    "kittens": {
-      "description": "Required to save the kittens details",
-      "type": "io.cozy.kitten"
+    "bills": {
+      "description": "Required to save the bills data",
+      "type": "io.cozy.bills"
     },
     "files": {
       "description": "Required to save the bills",
@@ -46,6 +46,6 @@
   },
   "developer": {
     "name": "cozy",
-    "url": "cozy.io"
+    "url": "https://cozy.io"
   }
 }
