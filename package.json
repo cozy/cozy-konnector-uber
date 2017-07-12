@@ -1,0 +1,44 @@
+{
+  "name": "cozy-konnector-uber",
+  "version": "1.0.0",
+  "description": "Get your bills from Uber",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cozy/cozy-konnector-uber.git"
+  },
+  "keywords": [],
+  "author": "Cozy Cloud <contact@cozycloud.cc> (https://cozy.io)",
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "async": "^2.5.0",
+    "cheerio": "^1.0.0-rc.2",
+    "cozy-konnector-libs": "^2.4.1",
+    "moment": "^2.18.1",
+    "request": "^2.81.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "oauth": "env-cmd ./data/env.js cozy-authenticate manifest.konnector",
+    "predev": "npm run oauth && env-cmd ./data/env.js cozy-init-dev-account ./data/account.txt ./data/env_fields.json",
+    "dev": "env-cmd ./data/env_development.js npm start",
+    "standalone": "env-cmd ./data/env_standalone.js npm start",
+    "build": "webpack",
+    "lint": "standard --fix konnector.js",
+    "deploy:travis": "git-directory-deploy --username cozy --email contact@cozycloud.cc --directory build/ --repo=https://$GITHUB_TOKEN@github.com/cozy/cozy-konnector-uber.git",
+    "deploy": "git-directory-deploy --directory build/ --branch build --repo=https://github.com/cozy/cozy-konnector-uber.git"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "^4.0.1",
+    "cz-conventional-changelog": "^2.0.0",
+    "env-cmd": "^5.1.0",
+    "git-directory-deploy": "^1.5.1",
+    "request-debug": "^0.2.0",
+    "standard": "^10.0.2",
+    "webpack": "^2.5.1"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}
