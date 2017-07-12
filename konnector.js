@@ -1,16 +1,31 @@
-// This is a default simple connector made to show you some common libs which can be used
-// This connector fetches some cat images from the qwant api (which is more open than the google one)
-
 'use strict'
 
-const {baseKonnector, filterExisting, saveDataAndFile, models} = require('cozy-konnector-libs')
-const Kitten = models.baseModel.createNew({
-  name: 'io.cozy.kitten'
-})
+const request = require('request')
+const cheerio = require('cheerio')
+const async = require('async')
+const moment = require('moment')
+
+const {log, baseKonnector, filterExisting, saveDataAndFile, linkBankOperation, models} = require('cozy-konnector-libs')
+const Bill = models.bill
+
+const fileOptions = {
+  vendor: 'UBER',
+  dateFormat: 'YYYYMMDD'
+}
 
 module.exports = baseKonnector.createNew({
-  name: 'io.cozy.kitten',
-  models: [],
+  name: 'Uber',
+  vendorLink: 'https://uber.com',
+
+  dataType: ['bill'],
+  models: [Bill],
+
+  category: 'transport',
+  color: {
+    hex: '#000203',
+    css: '#000203'
+  },
+
   // fetchOperation is the list of function which will be called in sequence with the following
   // parameters :
   // requiredFields : the list of attributes of your connector that the user can choose (ofter login and password)
@@ -18,74 +33,195 @@ module.exports = baseKonnector.createNew({
   // data : another object passed accross function, not used
   // next : this is a callback you have to call when the task of the current function is finished
   fetchOperations: [
-    fetchKittens,
+    logIn,
+    getTrips,
     customFilterExisting,
-    customSaveDataAndFile
+    customSaveDataAndFile,
+    logOut,
+    linkBankOperation({
+      log,
+      minDateDelta: 1,
+      maxDateDelta: 1,
+      model: Bill,
+      amountDelta: 0.1,
+      identifier: 'UBER'
+    })
   ]
 })
 
-function fetchKittens (requiredFields, entries, data, next) {
-  let request = require('request')
-  // request-debug is a module which can trace and display in the standard output all the internet
-  // requests made by the konnector with the request module or request-promise also.
-  // require('request-debug')(request)
-
-  // Here we define the default parameters used in any http request made by the request modules so
-  // that you do not have to fill it every time. Here we only do one request but it can be usefull
-  // for a real connector.
-  request = request.defaults({
-    json: true,
-    headers: {
-      // a lot of web service do not want to be called by robots and then check the user agent to
-      // be sure they are called by a browser. This user agent works most of the time.
-      'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:36.0) ' +
-                    'Gecko/20100101 Firefox/36.0'
-    }
-  })
-  request({
-    uri: 'https://api.qwant.com/api/search/images',
-    qs: {
-      q: 'chatons',
-      count: 10
-    }
-  }, function (err, response, body) {
-    // Error handling. If there was an error in the previous request, we directly call next filling
-    // the first argument which is the error message. Then the connector is directly stopped.
-    if (err) return next(err.message)
-
-    if (body && body.data && body.data.result && body.data.result.items) {
-      // entries.fetched is used by filterExisting to check if some of its items already exist
-      entries.fetched = body.data.result.items.map(item => ({
-        title: item.title,
-        pdfurl: item.media,
-        // uniqueId will be the final name of the saved file, it is also used to check if the file
-        // is already there and not fetch a duplicate version of it
-        uniqueId: getFileName(item.media) + '_' + item._id
-      }))
-      next()
-    }
-  })
-
-  function getFileName (caturl) {
-    // from http://tout-en-couleur.e-monsite.com/medias/images/holy.jpg to holy
-    const path = require('path')
-    const parsed = require('url').parse(caturl)
-    return path.parse(path.basename(parsed.pathname)).name
+function logIn (requiredFields, bills, data, next) {
+  const logInOptions = {
+    method: 'GET',
+    jar: true,
+    url: 'https://login.uber.com/login'
   }
+
+  request(logInOptions, (err, res, body) => {
+    if (err) return next(err)
+
+    const $ = cheerio.load(body)
+    const token = $('input[name=_csrf_token]').val()
+
+    const signInOptions = {
+      method: 'POST',
+      jar: true,
+      url: 'https://login.uber.com/login',
+      form: {
+        email: requiredFields.login,
+        password: requiredFields.password,
+        _csrf_token: token
+      }
+    }
+
+    log('info', 'Logging in')
+
+    return request(signInOptions, (err, res) => {
+      if (err) {
+        log('log', err)
+        return next('LOGIN_FAILED')
+      }
+      if (res.statuCode >= 400) {
+        const err = `Status code: ${res.statusCode}`
+        log('log', err)
+        return next('LOGIN_FAILED')
+      }
+      log('info', 'Login succeeded')
+      log('info', 'Fetch trips info')
+
+      const tripsOptions = {
+        method: 'GET',
+        jar: true,
+        url: 'https://riders.uber.com/trips'
+      }
+      return request(tripsOptions, (err, res, body) => {
+        if (err) {
+          log('error', 'An error occured while fetching trips information')
+          log('log', err)
+          return next('UNKNOWN_ERROR')
+        }
+        log('info', 'Fetch trips information succeded')
+        data.tripsPage = body
+        return next()
+      })
+    })
+  })
+}
+
+function logOut (requiredFields, entries, data, next) {
+  const options = {
+    methods: 'GET',
+    jar: true,
+    url: 'https://riders.uber.com/logout'
+  }
+  request(options, (err) => {
+    if (err) {
+      log('error', 'Failed to logout')
+      log('log', err)
+      return next('UNKNOWN_ERROR')
+    }
+    log('info', 'Succesfully logged out')
+    return next()
+  })
+}
+
+function getTrips (requiredFields, bills, data, next) {
+  let $ = cheerio.load(data.tripsPage)
+  const tripsId = $('tbody .trip-expand__origin')
+                  .map((i, element) => $(element).data('target'))
+                  .get()
+                  .map(trip => trip.replace('#trip-', ''))
+  log('info', `Found ${tripsId.length} uber trips`)
+  const maybeNext = $('a.btn.pagination__next').attr('href')
+
+  log('info', `Found ${tripsId.length} uber trips`)
+  const fetchedBills = []
+  async.eachSeries(tripsId, (tripId, callback) => {
+    const tripOption = {
+      method: 'GET',
+      jar: true,
+      url: `https://riders.uber.com/trips/${tripId}`
+    }
+    return request(tripOption, (err, res, body) => {
+      if (err) {
+        log('error', 'Failed to get trip information')
+        log('log', err)
+        return callback('UNKNOWN_ERROR')
+      }
+      $ = cheerio.load(body)
+      const amount = $('td[class="text--right alpha weight--semibold"]')
+                    .text()
+                    .replace('€', '')
+                    .replace(',', '.')
+                    .trim()
+      const billUrlOptions = {
+        jar: true,
+        method: 'GET',
+        url: `https://riders.uber.com/get_invoices?q={"trip_uuid":"${tripId}"}`
+      }
+      return request(billUrlOptions, (err, res, body) => {
+        if (err) {
+          log('error', 'Failed to get bill url')
+          log('log', err)
+          return callback('UNKNOWN_ERROR')
+        }
+        if (res.statusCode >= 400) {
+          log('info', `No bill for this trip (${tripId})`)
+          return callback()
+        }
+        let parsedBody
+        try {
+          parsedBody = JSON.parse(body)
+        } catch (e) {
+          log('error', e)
+          return callback(e)
+        }
+        // This can be due to a cancelled trip.
+        if (parsedBody.length === 0) {
+          log('info', `No bill for this trip (${tripId})`)
+          return callback()
+        }
+
+        const bill = {
+          date: moment(new Date(parsedBody[0].invoice_date)),
+          amount: parseFloat(amount),
+          type: 'Taxi',
+          pdfurl: `https://riders.uber.com/invoice-gen${parsedBody[0].document_path}`,
+          vendor: 'Uber'
+        }
+        fetchedBills.push(bill)
+        return callback()
+      })
+    })
+  }, (err) => {
+    if (err) {
+      return next(err)
+    }
+    if (typeof bills.fetched === 'undefined') {
+      bills.fetched = fetchedBills
+    } else {
+      bills.fetched.concat(fetchedBills)
+    }
+
+    // Check if there is a next page
+    if (typeof maybeNext !== 'undefined') {
+      return request(`https://riders.uber.com/trips${maybeNext}`, (err, res, body) => {
+        if (err) {
+          log('error', err)
+          return next('UNKNOWN_ERROR')
+        }
+        data.tripsPage = body
+        return getTrips(requiredFields, bills, data, next)
+      })
+    }
+    log('info', 'Bills succesfully fetched')
+    return next()
+  })
 }
 
 function customFilterExisting (requiredFields, entries, data, next) {
-  // filterExisting will check if some items in entries.fetched already exist in database and pout
-  // the not existing ones in entries.filtered
-  filterExisting(null, Kitten)(requiredFields, entries, data, next)
+  filterExisting(log, Bill)(requiredFields, entries, data, next)
 }
 
 function customSaveDataAndFile (requiredFields, entries, data, next) {
-  // read items in entries.fetched or entries.filtered and put them in database. If there is a
-  // pdfurl attribute in some items, it will download the corresponding file and put it in your
-  // cozy
-  const fnsave = saveDataAndFile(null, Kitten, {
-    extension: 'jpg'
-  })
-  fnsave(requiredFields, entries, data, next)
+  saveDataAndFile(log, Bill, fileOptions, ['facture'])(requiredFields, entries, data, next)
 }

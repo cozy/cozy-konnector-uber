@@ -34,17 +34,17 @@ Most of the previous libs in the libs directory of the cozy/konnectors repositor
 
 Here is the list available at the moment with their equivalent in the old repository:
 
-| Old way | New way |
-| --- | --- |
-| libs/base_konnector | baseKonnector |
-| libs/fetcher | fetcher |
-| libs/filter_existing | filterExisting |
+| Old way                  | New way           |
+|:-------------------------|:------------------|
+| libs/base_konnector      | baseKonnector     |
+| libs/fetcher             | fetcher           |
+| libs/filter_existing     | filterExisting    |
 | libs/link_bank_operation | linkBankOperation |
-| libs/naming | naming |
-| libs/save_data_and_file | saveDataAndFile |
-| models/bill | models.bill |
-| models/file | models.file |
-| models/folder | models.folder |
+| libs/naming              | naming            |
+| libs/save_data_and_file  | saveDataAndFile   |
+| models/bill              | models.bill       |
+| models/file              | models.file       |
+| models/folder            | models.folder     |
 
 How to use it ? We will take the example of baseKonnector and models.bill
 
