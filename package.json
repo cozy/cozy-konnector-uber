@@ -10,11 +10,11 @@
   "author": "Cozy Cloud <contact@cozycloud.cc> (https://cozy.io)",
   "license": "AGPL-3.0",
   "dependencies": {
-    "async": "2.5.0",
-    "cheerio": "1.0.0-rc.2",
-    "cozy-konnector-libs": "2.5.6",
-    "moment": "2.18.1",
-    "request": "2.81.0"
+    "async": "^2.5.0",
+    "cheerio": "^1.0.0-rc.2",
+    "cozy-konnector-libs": "^2.5.6",
+    "moment": "^2.18.1",
+    "request": "^2.81.0"
   },
   "scripts": {
     "start": "node index.js",
@@ -28,13 +28,13 @@
     "deploy": "git-directory-deploy --directory build/ --branch build --repo=https://github.com/cozy/cozy-konnector-uber.git"
   },
   "devDependencies": {
-    "copy-webpack-plugin": "4.0.1",
-    "cz-conventional-changelog": "2.0.0",
-    "env-cmd": "5.1.0",
-    "git-directory-deploy": "1.5.1",
-    "request-debug": "0.2.0",
-    "standard": "10.0.2",
-    "webpack": "2.6.1"
+    "copy-webpack-plugin": "^4.0.1",
+    "cz-conventional-changelog": "^2.0.0",
+    "env-cmd": "^5.1.0",
+    "git-directory-deploy": "^1.5.1",
+    "request-debug": "^0.2.0",
+    "standard": "^10.0.2",
+    "webpack": "^2.5.1"
   },
   "config": {
     "commitizen": {
