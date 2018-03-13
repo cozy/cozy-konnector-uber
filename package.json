@@ -28,7 +28,7 @@
     "deploy": "git-directory-deploy --directory build/ --branch build --repo=https://github.com/cozy/cozy-konnector-uber.git"
   },
   "devDependencies": {
-    "copy-webpack-plugin": "4.0.1",
+    "copy-webpack-plugin": "4.5.1",
     "cz-conventional-changelog": "2.0.0",
     "env-cmd": "5.1.0",
     "git-directory-deploy": "1.5.1",
