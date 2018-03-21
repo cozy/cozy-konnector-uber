@@ -34,7 +34,7 @@
     "git-directory-deploy": "1.5.1",
     "request-debug": "0.2.0",
     "standard": "10.0.3",
-    "webpack": "2.7.0"
+    "webpack": "4.2.0"
   },
   "config": {
     "commitizen": {
